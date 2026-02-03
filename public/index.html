@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ai-event — скачивай видео и аудио с YouTube">
+  <title>ai-event — Загрузчик</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">▓▓▓ ai-event ▓▓▓</h1>
+    </header>
+
+    <main class="main">
+      <div class="input-group">
+        <input type="text" id="url-input" class="url-input" placeholder="ВСТАВЬТЕ ССЫЛКУ YOUTUBE..." autocomplete="off">
+        <button id="paste-btn" class="btn btn-paste">ВСТАВИТЬ</button>
+      </div>
+
+      <div id="video-info" class="video-info hidden">
+        <div class="info-row">
+          <span class="label">НАЗВАНИЕ:</span>
+          <span id="video-title" class="value">-</span>
+        </div>
+        <div class="info-row">
+          <span class="label">ДЛИТЕЛЬНОСТЬ:</span>
+          <span id="video-duration" class="value">-</span>
+        </div>
+      </div>
+
+      <!-- Quality Selection -->
+      <div id="quality-section" class="quality-section hidden">
+        <div class="quality-group">
+          <span class="quality-label">КАЧЕСТВО ВИДЕО:</span>
+          <select id="video-quality" class="quality-select">
+            <option value="best">ЛУЧШЕЕ</option>
+            <option value="1080">1080p</option>
+            <option value="720">720p</option>
+            <option value="480">480p</option>
+            <option value="360">360p</option>
+          </select>
+        </div>
+        <div class="quality-group">
+          <span class="quality-label">КАЧЕСТВО АУДИО:</span>
+          <select id="audio-quality" class="quality-select">
+            <option value="0">ЛУЧШЕЕ</option>
+            <option value="128">128 kbps</option>
+            <option value="192">192 kbps</option>
+            <option value="256">256 kbps</option>
+            <option value="320">320 kbps</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="format-buttons">
+        <button id="btn-video" class="btn btn-format" disabled>
+          <span class="btn-icon">▶</span>
+          <span>ВИДЕО</span>
+        </button>
+        <button id="btn-audio" class="btn btn-format" disabled>
+          <span class="btn-icon">♪</span>
+          <span>АУДИО</span>
+        </button>
+      </div>
+
+      <div class="status-bar">
+        <span class="status-label">СТАТУС:</span>
+        <span id="status-text" class="status-text">ГОТОВ</span>
+      </div>
+
+      <div id="progress-bar" class="progress-bar hidden">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <span class="footer-text">[ ai-event v1.0 ]</span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
