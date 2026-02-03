@@ -104,9 +104,9 @@ app.post('/api/download', async (req, res) => {
     } else {
         let formatSpec;
         if (quality === 'best') {
-            formatSpec = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best';
+            formatSpec = 'bestvideo+bestaudio/best';
         } else {
-            formatSpec = `bestvideo[height<=${quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${quality}][ext=mp4]/best`;
+            formatSpec = `bestvideo[height<=${quality}]+bestaudio/best[height<=${quality}]/best`;
         }
         args.push(
             '-f', formatSpec,
