@@ -104,9 +104,10 @@ app.post('/api/download', async (req, res) => {
     } else {
         let formatSpec;
         if (quality === 'best') {
-            formatSpec = 'bestvideo+bestaudio/best';
+            formatSpec = 'bestvideo+bestaudio';
         } else {
-            formatSpec = `bestvideo[height<=${quality}]+bestaudio/best[height<=${quality}]/best`;
+            // Try to download exact height or best available up to that height, matched with audio
+            formatSpec = `bestvideo[height<=${quality}]+bestaudio`;
         }
         args.push(
             '-f', formatSpec,
@@ -154,7 +155,16 @@ app.post('/api/download', async (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok' });
+    const ffmpeg = spawn('ffmpeg', ['-version']);
+    let output = '';
+    ffmpeg.stdout.on('data', d => output += d);
+    ffmpeg.on('close', code => {
+        res.json({
+            status: 'ok',
+            ffmpeg: code === 0 ? 'installed' : 'missing',
+            version: output.split('\n')[0]
+        });
+    });
 });
 
 app.listen(PORT, () => {
