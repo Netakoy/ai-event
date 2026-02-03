@@ -35,8 +35,8 @@ app.post('/api/info', async (req, res) => {
     const args = [
         '--dump-json',
         '--no-playlist',
-        // Попытка обойти блокировку ботов
-        '--extractor-args', 'youtube:player_client=android',
+        '--force-ipv4', // FIX: Принудительный IPv4 для обхода блоков
+        '--extractor-args', 'youtube:player_client=android', // FIX: Притворяемся Android чтобы не просило логин
         '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         url
     ];
@@ -56,7 +56,6 @@ app.post('/api/info', async (req, res) => {
     ytdlp.on('close', (code) => {
         if (code !== 0) {
             console.error('yt-dlp error:', stderr);
-            // Возвращаем реальную ошибку клиенту для отладки
             return res.status(500).json({ error: stderr || 'Не удалось получить информацию (Server Error)' });
         }
 
@@ -82,22 +81,18 @@ app.post('/api/download', async (req, res) => {
         return res.status(400).json({ error: 'Неверная ссылка YouTube' });
     }
 
-    if (!['video', 'audio'].includes(format)) {
-        return res.status(400).json({ error: 'Неверный формат' });
-    }
-
     const fileId = uuidv4();
     const ext = format === 'audio' ? 'mp3' : 'mp4';
     const outputPath = path.join(TEMP_DIR, `${fileId}.${ext}`);
 
     let args = [
         '--no-playlist',
+        '--force-ipv4', // FIX: Принудительный IPv4
         '--extractor-args', 'youtube:player_client=android',
         '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     ];
 
     if (format === 'audio') {
-        // Audio quality
         const audioQuality = quality === '0' ? '0' : quality;
         args.push(
             '-x',
@@ -107,7 +102,6 @@ app.post('/api/download', async (req, res) => {
             url
         );
     } else {
-        // Video quality
         let formatSpec;
         if (quality === 'best') {
             formatSpec = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best';
@@ -143,7 +137,6 @@ app.post('/api/download', async (req, res) => {
         }
 
         const downloadName = `download.${ext}`;
-
         res.setHeader('Content-Disposition', `attachment; filename="${downloadName}"`);
         res.setHeader('Content-Type', format === 'audio' ? 'audio/mpeg' : 'video/mp4');
 
@@ -151,17 +144,11 @@ app.post('/api/download', async (req, res) => {
         fileStream.pipe(res);
 
         fileStream.on('end', () => {
-            fs.unlink(outputPath, (err) => {
-                if (err) console.error('Failed to delete temp file:', err);
-            });
+            fs.unlink(outputPath, () => { });
         });
 
-        fileStream.on('error', (err) => {
-            console.error('Stream error:', err);
+        fileStream.on('error', () => {
             fs.unlink(outputPath, () => { });
-            if (!res.headersSent) {
-                res.status(500).json({ error: 'Ошибка потока' });
-            }
         });
     });
 });
