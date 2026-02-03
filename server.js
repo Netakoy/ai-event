@@ -35,6 +35,9 @@ app.post('/api/info', async (req, res) => {
     const args = [
         '--dump-json',
         '--no-playlist',
+        // Попытка обойти блокировку ботов
+        '--extractor-args', 'youtube:player_client=android',
+        '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         url
     ];
 
@@ -53,7 +56,8 @@ app.post('/api/info', async (req, res) => {
     ytdlp.on('close', (code) => {
         if (code !== 0) {
             console.error('yt-dlp error:', stderr);
-            return res.status(500).json({ error: 'Не удалось получить информацию' });
+            // Возвращаем реальную ошибку клиенту для отладки
+            return res.status(500).json({ error: stderr || 'Не удалось получить информацию (Server Error)' });
         }
 
         try {
@@ -65,7 +69,7 @@ app.post('/api/info', async (req, res) => {
                 uploader: info.uploader
             });
         } catch (e) {
-            res.status(500).json({ error: 'Ошибка парсинга данных' });
+            res.status(500).json({ error: 'Ошибка парсинга данных (Invalid JSON)' });
         }
     });
 });
@@ -86,35 +90,36 @@ app.post('/api/download', async (req, res) => {
     const ext = format === 'audio' ? 'mp3' : 'mp4';
     const outputPath = path.join(TEMP_DIR, `${fileId}.${ext}`);
 
-    let args;
+    let args = [
+        '--no-playlist',
+        '--extractor-args', 'youtube:player_client=android',
+        '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    ];
 
     if (format === 'audio') {
-        // Audio quality: 0 = best, or specific bitrate
+        // Audio quality
         const audioQuality = quality === '0' ? '0' : quality;
-        args = [
+        args.push(
             '-x',
             '--audio-format', 'mp3',
             '--audio-quality', audioQuality,
             '-o', outputPath,
-            '--no-playlist',
             url
-        ];
+        );
     } else {
         // Video quality
         let formatSpec;
         if (quality === 'best') {
             formatSpec = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best';
         } else {
-            // Specific resolution
             formatSpec = `bestvideo[height<=${quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${quality}][ext=mp4]/best`;
         }
-        args = [
+        args.push(
             '-f', formatSpec,
             '--merge-output-format', 'mp4',
             '-o', outputPath,
-            '--no-playlist',
             url
-        ];
+        );
     }
 
     const ytdlp = spawn('yt-dlp', args);
@@ -127,14 +132,12 @@ app.post('/api/download', async (req, res) => {
     ytdlp.on('close', (code) => {
         if (code !== 0) {
             console.error('yt-dlp error:', stderr);
-            // Clean up on error
             if (fs.existsSync(outputPath)) {
                 fs.unlinkSync(outputPath);
             }
-            return res.status(500).json({ error: 'Ошибка загрузки' });
+            return res.status(500).json({ error: stderr || 'Ошибка загрузки (Server Error)' });
         }
 
-        // Check if file exists
         if (!fs.existsSync(outputPath)) {
             return res.status(500).json({ error: 'Файл не создан' });
         }
@@ -148,7 +151,6 @@ app.post('/api/download', async (req, res) => {
         fileStream.pipe(res);
 
         fileStream.on('end', () => {
-            // Clean up temp file after sending
             fs.unlink(outputPath, (err) => {
                 if (err) console.error('Failed to delete temp file:', err);
             });
@@ -164,7 +166,6 @@ app.post('/api/download', async (req, res) => {
     });
 });
 
-// Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
 });

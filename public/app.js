@@ -84,7 +84,7 @@
         if (isLoading) return;
 
         isLoading = true;
-        setStatus('ЗАГРУЗКА...', 'loading');
+        setStatus('ЗАГРУЗКА ИНФО...', 'loading');
         disableButtons();
 
         try {
@@ -105,7 +105,18 @@
             enableButtons();
             setStatus('ГОТОВ К ЗАГРУЗКЕ');
         } catch (err) {
-            setStatus(err.message.toUpperCase(), 'error');
+            let msg = err.message;
+
+            // Анализ ошибки для пользователя
+            if (msg.includes('Sign in to confirm')) {
+                msg = 'YOUTUBE БЛОКИРУЕТ СЕРВЕР (IP)';
+                console.error('Server IP blocked by YouTube');
+            } else if (msg.length > 60) {
+                console.error('DEBUG ERROR:', msg);
+                msg = 'ОШИБКА СЕРВЕРА (СМ. КОНСОЛЬ)';
+            }
+
+            setStatus(msg.toUpperCase(), 'error');
             hideVideoInfo();
             hideQualitySection();
         } finally {
@@ -203,7 +214,13 @@
 
         } catch (err) {
             clearInterval(progressInterval);
-            setStatus(err.message.toUpperCase(), 'error');
+            let msg = err.message;
+            if (msg.includes('Sign in to confirm')) {
+                msg = 'YOUTUBE БЛОКИРУЕТ (IP)';
+            } else if (msg.length > 60) {
+                msg = 'ОШИБКА ЗАГРУЗКИ (см. консоль)';
+            }
+            setStatus(msg.toUpperCase(), 'error');
             hideProgress();
             enableButtons();
         } finally {
