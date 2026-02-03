@@ -35,9 +35,9 @@ app.post('/api/info', async (req, res) => {
     const args = [
         '--dump-json',
         '--no-playlist',
-        '--force-ipv4', // FIX: Принудительный IPv4 для обхода блоков
-        '--extractor-args', 'youtube:player_client=android', // FIX: Притворяемся Android чтобы не просило логин
-        '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        '--force-ipv4',
+        // Пробуем iOS клиент (часто помогает от 'Sign in to confirm')
+        '--extractor-args', 'youtube:player_client=ios',
         url
     ];
 
@@ -87,9 +87,8 @@ app.post('/api/download', async (req, res) => {
 
     let args = [
         '--no-playlist',
-        '--force-ipv4', // FIX: Принудительный IPv4
-        '--extractor-args', 'youtube:player_client=android',
-        '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        '--force-ipv4',
+        '--extractor-args', 'youtube:player_client=ios'
     ];
 
     if (format === 'audio') {
